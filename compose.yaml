@@ -1,0 +1,89 @@
+# 🟧 Mbox for Laravel
+# https://github.com/markshust/mbox-laravel
+#
+# 1.0.0
+
+name: ${DOCKER_TRAEFIK_IDENTIFIER}
+
+services:
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "${FORWARD_PORT_NGINX:-8000}:80"
+    volumes:
+      - .:/var/www/html
+      - ./docker/images/nginx/conf/default.conf:/etc/nginx/conf.d/default.conf
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.http${DOCKER_TRAEFIK_IDENTIFIER}.rule=Host(`${DOCKER_TRAEFIK_DOMAIN}`)
+      - traefik.http.routers.http${DOCKER_TRAEFIK_IDENTIFIER}.entrypoints=http
+      - traefik.http.routers.https${DOCKER_TRAEFIK_IDENTIFIER}.rule=Host(`${DOCKER_TRAEFIK_DOMAIN}`)
+      - traefik.http.routers.https${DOCKER_TRAEFIK_IDENTIFIER}.entrypoints=https
+      - traefik.http.routers.https${DOCKER_TRAEFIK_IDENTIFIER}.tls=true
+    working_dir: /var/www/html
+    depends_on:
+      - phpfpm
+
+  phpfpm:
+    build: docker/images/phpfpm
+    volumes:
+      - .:/var/www/html
+      - ./docker/images/phpfpm/conf/php.ini:/usr/local/etc/php/conf.d/php.ini
+    depends_on:
+      - mariadb
+
+  mariadb:
+    image: mariadb:11.6
+    ports:
+      - "${FORWARD_PORT_MARIADB:-3306}:3306"
+    env_file: .env
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+  node:
+    build: docker/images/node
+    ports:
+      - "${FORWARD_PORT_VITE:-5173}:5173"
+    volumes:
+      - .:/var/www/html
+    environment:
+      - HOST=0.0.0.0
+    labels:
+      - traefik.enable=true
+      - "traefik.http.routers.node.rule=Host(`${DOCKER_TRAEFIK_DOMAIN}`) && (PathPrefix(`/@vite`) || PathPrefix(`/resources`) || PathPrefix(`/node_modules`))"
+      - traefik.http.routers.node.entrypoints=https
+      - traefik.http.routers.node.tls=true
+      - traefik.http.services.node.loadbalancer.server.port=5173
+    working_dir: /var/www/html
+
+  memcached:
+    image: memcached:1.6-alpine
+    ports:
+      - "${FORWARD_PORT_MEMCACHED:-11211}:11211"
+
+  redis:
+    image: redis:7.4-alpine
+    ports:
+      - "${FORWARD_PORT_REDIS:-6379}:6379"
+
+  mailpit:
+    image: axllent/mailpit:v1.22
+    ports:
+      - "${FORWARD_PORT_MAILPIT:-1025}:1025"
+      - "${FORWARD_PORT_MAILPIT_DASHBOARD:-8025}:8025"
+
+  traefik:
+    image: traefik:3.3
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./docker/traefik/traefik.yml:/etc/traefik/traefik.yml
+      - ./docker/traefik/ssl.yml:/etc/traefik/ssl.yml
+      - ./docker/ssl/ssl.crt:/etc/ssl/certs/ssl.crt:ro
+      - ./docker/ssl/ssl.key:/etc/ssl/certs/ssl.key:ro
+
+volumes:
+  mariadb_data:

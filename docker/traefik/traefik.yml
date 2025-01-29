@@ -1,0 +1,18 @@
+api:
+  insecure: true
+providers:
+  docker:
+    exposedByDefault: false
+    network: traefik_network
+  file:
+    filename: /etc/traefik/ssl.yml
+entryPoints:
+  http:
+    address: ':80'
+    http:
+      redirections:
+        entryPoint:
+          to: https
+          scheme: https
+  https:
+    address: ':443'
