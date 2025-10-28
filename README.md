@@ -60,7 +60,7 @@ sudo bash -c 'echo "nameserver 127.0.0.1" > /etc/resolver/test'
 
 ### SSL/HTTPS
 
-This project uses Traefik to terminate SSL, so you will need to generate a wildcard SSL cert for your domain.
+This project uses Traefik to terminate SSL, so you will need to generate an SSL certificate for your domain.
 
 Install `mkcert` to generate local SSL certs:
 
@@ -69,16 +69,16 @@ brew install mkcert
 mkcert -install
 ```
 
-Then make a wildcard cert:
+Then generate a certificate for your domain (replace `acme.test` with your actual domain):
 
 ```yaml
-mkcert -key-file docker/ssl/ssl.key -cert-file docker/ssl/ssl.crt "*.test"
+mkcert -key-file docker/ssl/ssl.key -cert-file docker/ssl/ssl.crt "acme.test"
 ```
 
 And set proper permissions on the cert and key:
 
 ```diff
-chmod 600 docker/ssl/ssl.crt 
+chmod 600 docker/ssl/ssl.crt
 chmod 400 docker/ssl/ssl.key
 ```
 
