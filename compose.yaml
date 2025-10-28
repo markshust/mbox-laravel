@@ -1,7 +1,7 @@
 # 🟧 Mbox for Laravel
 # https://github.com/markshust/mbox-laravel
 #
-# 1.0.1
+# 1.0.2
 
 name: ${DOCKER_TRAEFIK_IDENTIFIER}
 
