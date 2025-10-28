@@ -32,7 +32,17 @@ Mbox is meant to get your Laravel instance up & running with minimal hassle, and
 Copy these directories and files over to your Laravel project:
 - `docker`: Docker images and configuration files
 - `compose.yaml`: Docker Compose configuration
-- `vite.config.js`: Vite configuration, replace `acme.test` with your domain
+- `vite.config.js`: Vite configuration
+
+**Important:** In `vite.config.js`, update the HMR host from `acme.test` to your actual domain:
+```javascript
+hmr: {
+    host: 'yourproject.test',  // Replace with your domain
+    protocol: 'wss',
+    clientPort: 443,
+    path: 'wss'
+}
+```
 
 Copy the values from `.env.docker` over to your main `.env` file, and modify them as necessary.
 
